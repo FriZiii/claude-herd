@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decisions</title>
+<script src="/marked.min.js"></script>
+<style>
+:root {
+  --bg: #f5f6f9; --surface: #ffffff; --fg: #1b2130; --muted: #5f6779; --line: #dce0e8;
+  --accent: #2f55d4; --accent-soft: #e7ecff; --on-accent: #ffffff;
+  --ok: #1d8a5b; --ok-soft: #e1f3e9;
+  --warn: #a96400; --warn-soft: #fcefd8;
+  --skip: #6b7280; --skip-soft: #eceef2;
+  --danger: #c0392b; --danger-soft: #fbe5e2;
+  --code-bg: #eef1f6;
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-head: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151c; --surface: #1a1f29; --fg: #e4e7ef; --muted: #9aa2b4; --line: #2c3341;
+    --accent: #89a3ff; --accent-soft: #232c49; --on-accent: #10131a;
+    --ok: #5cc995; --ok-soft: #173326; --warn: #f0b04f; --warn-soft: #382a12;
+    --skip: #a3aab8; --skip-soft: #262b35; --danger: #ff8a7a; --danger-soft: #3a1d1a; --code-bg: #20252f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151c; --surface: #1a1f29; --fg: #e4e7ef; --muted: #9aa2b4; --line: #2c3341;
+  --accent: #89a3ff; --accent-soft: #232c49; --on-accent: #10131a;
+  --ok: #5cc995; --ok-soft: #173326; --warn: #f0b04f; --warn-soft: #382a12;
+  --skip: #a3aab8; --skip-soft: #262b35; --danger: #ff8a7a; --danger-soft: #3a1d1a; --code-bg: #20252f;
+  color-scheme: dark;
+}
+.theme { all: unset; cursor: pointer; font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; }
+.theme:hover { color: var(--fg); border-color: var(--muted); }
+.theme:focus-visible { outline: 2px solid var(--accent); }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--font); }
+code, kbd { font-family: var(--mono); font-size: 0.88em; }
+code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { background: var(--code-bg); padding: 10px 12px; border-radius: 6px; overflow-x: auto; }
+pre code { background: none; padding: 0; }
+.md > :first-child { margin-top: 0; } .md > :last-child { margin-bottom: 0; }
+.md p { margin: 0 0 8px; }
+.md ul, .md ol { margin: 0 0 8px; padding-left: 22px; }
+.md table { border-collapse: collapse; font-size: 14px; }
+.md th, .md td { border: 1px solid var(--line); padding: 4px 8px; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header.top { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top-inner { max-width: 880px; margin: 0 auto; padding: 14px 20px 0; display: flex; flex-direction: column; gap: 10px; }
+.title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+h1 { font: 600 1.3rem/1.2 var(--font-head); margin: 0; flex: 1; min-width: 0; }
+.conn { font: 500 12px/1 var(--mono); color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.conn::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.conn.off::before { background: var(--danger); }
+.working { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--muted); }
+.working .chip-w { background: var(--warn-soft); color: var(--warn); border-radius: 999px; padding: 3px 10px; font-weight: 600; font-size: 12.5px; }
+@media (prefers-reduced-motion: no-preference) { .working .chip-w { animation: pulse 1.6s ease-in-out infinite; } }
+@keyframes pulse { 50% { opacity: 0.55; } }
+.tabs { display: flex; gap: 2px; overflow-x: auto; margin-bottom: -1px; }
+.tab { all: unset; cursor: pointer; padding: 8px 14px; border-radius: 8px 8px 0 0; color: var(--muted); white-space: nowrap; display: flex; gap: 7px; align-items: center; border: 1px solid transparent; }
+.tab:hover { color: var(--fg); }
+.tab[aria-selected="true"] { color: var(--fg); background: var(--bg); border-color: var(--line); border-bottom-color: var(--bg); font-weight: 600; }
+.tab:focus-visible { outline: 2px solid var(--accent); }
+.tab.done-tab { margin-left: auto; }
+.badge { font: 600 11px/1 var(--mono); background: var(--accent-soft); color: var(--accent); padding: 3px 6px; border-radius: 999px; }
+.badge.zero { background: var(--ok-soft); color: var(--ok); }
+.badge.new { background: var(--accent); color: var(--on-accent); }
+.badge.plain { background: var(--skip-soft); color: var(--muted); }
+
+main { max-width: 880px; margin: 0 auto; padding: 20px 20px 48px; display: flex; flex-direction: column; gap: 14px; }
+.group-intro { color: var(--muted); }
+.empty { text-align: center; color: var(--muted); padding: 12vh 20px; display: flex; flex-direction: column; gap: 6px; }
+.empty b { color: var(--fg); font: 600 1.15rem/1.3 var(--font-head); }
+
+details.prev { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+details.prev summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+details.prev[open] summary { margin-bottom: 8px; }
+
+.q { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; scroll-margin-top: 140px; }
+.q.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.q-head { display: flex; gap: 10px; align-items: baseline; }
+.q-id { font: 600 13px/1 var(--mono); color: var(--accent); flex: none; }
+.q-title { font: 600 1.05rem/1.35 var(--font-head); margin: 0; flex: 1; min-width: 0; }
+.pill { font: 600 11px/1 var(--mono); padding: 5px 8px; border-radius: 999px; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.04em; flex: none; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.open { background: var(--accent-soft); color: var(--accent); }
+.pill.explain { background: var(--warn-soft); color: var(--warn); }
+.pill.skip { background: var(--skip-soft); color: var(--skip); }
+.pill.new { background: var(--accent); color: var(--on-accent); }
+.pill.work { background: var(--warn-soft); color: var(--warn); }
+.explanation { background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; }
+.explanation .lbl { font: 600 11px/1 var(--mono); color: var(--warn); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
+details.ctx { border-left: 2px solid var(--line); padding-left: 12px; color: var(--muted); font-size: 14px; }
+details.ctx summary { cursor: pointer; font-size: 13px; }
+details.ctx[open] summary { margin-bottom: 6px; }
+
+.options { display: flex; flex-direction: column; gap: 6px; }
+.opt { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; background: var(--surface); }
+.opt:hover { border-color: var(--muted); }
+.opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+.opt input { margin: 3px 0 0; accent-color: var(--accent); flex: none; }
+.opt .num { font: 600 12px/1.6 var(--mono); color: var(--muted); flex: none; min-width: 12px; }
+.opt .txt { flex: 1; min-width: 0; }
+.opt .desc { color: var(--muted); font-size: 13.5px; }
+.rec { font: 600 10.5px/1 var(--mono); color: var(--ok); background: var(--ok-soft); padding: 4px 6px; border-radius: 4px; white-space: nowrap; flex: none; align-self: center; }
+
+textarea { width: 100%; min-height: 64px; resize: vertical; font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.field-lbl { font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; }
+
+.q-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { all: unset; cursor: pointer; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; color: var(--muted); }
+.chip:hover { color: var(--fg); border-color: var(--muted); }
+.chip:focus-visible { outline: 2px solid var(--accent); }
+.chip.on.explain { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.chip.on.skip { background: var(--skip-soft); color: var(--fg); border-color: transparent; }
+.chip.on.note { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.chip kbd { font-size: 11px; opacity: 0.8; }
+.dim { opacity: 0.45; pointer-events: none; }
+
+.send-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; padding: 4px 0; }
+.send-actions .keys { font: 400 12px/1.4 var(--mono); color: var(--muted); flex: 1; min-width: 200px; }
+.q.readonly { gap: 10px; }
+.opt.ro { cursor: default; }
+.opt.ro:hover { border-color: var(--line); }
+.opt.ro.sel:hover { border-color: var(--accent); }
+.mark { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid var(--muted); flex: none; margin-top: 3px; }
+.mark.box { border-radius: 4px; }
+.opt.sel .mark { border: 4.5px solid var(--accent); }
+.ro-text { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; white-space: pre-wrap; }
+.ro-note { font-size: 14px; color: var(--muted); white-space: pre-wrap; }
+.ro-note b { color: var(--fg); font-weight: 600; }
+.source { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.src-type { font: 600 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.05em; padding: 5px 8px; border-radius: 6px; background: var(--skip-soft); color: var(--fg); }
+.src-type.grill { background: var(--warn-soft); color: var(--warn); }
+.src-type.subagent { background: var(--accent-soft); color: var(--accent); }
+.src-type.agent { background: var(--ok-soft); color: var(--ok); }
+.src-id { font-family: var(--mono); font-size: 12px; background: var(--code-bg); padding: 2px 6px; border-radius: 4px; }
+.done-card.click { cursor: pointer; }
+.done-card.click:hover { border-color: var(--muted); }
+.done-card .more { font-size: 13px; color: var(--accent); }
+.back { all: unset; cursor: pointer; color: var(--accent); font-size: 14px; align-self: flex-start; }
+.back:focus-visible { outline: 2px solid var(--accent); }
+.detail-head { display: flex; gap: 10px; align-items: center; }
+.detail-head h2 { font: 600 1.25rem/1.3 var(--font-head); margin: 0; flex: 1; }
+.round-lbl { font: 500 12px/1 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px; }
+.warnbar { flex-basis: 100%; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--warn-soft); padding: 8px 12px; border-radius: 8px; font-size: 14px; }
+.errbar { flex-basis: 100%; color: var(--danger); font-size: 14px; }
+
+.hist { display: flex; flex-direction: column; }
+.hist-round { padding: 6px 0; }
+.hist-round + .hist-round { border-top: 1px dashed var(--line); }
+.hist-when { font: 500 11.5px/1 var(--mono); color: var(--muted); display: block; margin: 6px 0 4px; }
+.hist-item { display: grid; grid-template-columns: 56px 1fr; gap: 2px 12px; padding: 4px 0; }
+.hist-item .ans { grid-column: 2; color: var(--muted); font-size: 14px; white-space: pre-wrap; }
+
+.done-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.done-head { display: flex; gap: 10px; align-items: center; }
+.done-head h2 { font: 600 1.05rem/1.3 var(--font-head); margin: 0; flex: 1; }
+
+.btn { all: unset; cursor: pointer; font-weight: 600; font-size: 14px; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); color: var(--fg); background: var(--surface); }
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn[disabled] { opacity: 0.45; cursor: default; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ended { position: fixed; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 20; text-align: center; padding: 20px; }
+.ended h2 { font: 600 1.6rem/1.2 var(--font-head); margin: 0 0 8px; }
+.ended p { color: var(--muted); margin: 0; }
+@media (prefers-reduced-motion: no-preference) { .q { transition: box-shadow 0.15s, border-color 0.15s; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="title-row"><h1 id="title">Decisions</h1><span class="conn" id="conn">connected</span><button class="theme" id="theme" type="button"></button></div>
+    <div class="working" id="working" hidden></div>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+  </div>
+</header>
+<main id="main"></main>
+
+<script>
+const md = (s) => (s ? (window.marked ? marked.parse(String(s), { breaks: true }) : esc(s)) : '');
+function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem('decide:' + location.host + ':' + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('decide:' + location.host + ':' + k, JSON.stringify(v)); } catch {} },
+};
+
+// Theme: system → light → dark; the choice is remembered across all decide sessions
+const THEMES = { system: 'Theme: system', light: 'Theme: light', dark: 'Theme: dark' };
+function applyTheme(t) {
+  if (t === 'system') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('theme').textContent = THEMES[t];
+  try { localStorage.setItem('decide:theme', t); } catch {}
+}
+let theme = (() => { try { return localStorage.getItem('decide:theme') || 'system'; } catch { return 'system'; } })();
+applyTheme(theme);
+document.getElementById('theme').onclick = () => {
+  theme = { system: 'light', light: 'dark', dark: 'system' }[theme];
+  applyTheme(theme);
+};
+
+let snap = null;            // latest state from the server
+let activeTab = null;       // group id or '__done'
+let doneDetail = null;      // id of the group opened in the "Done" tab
+let activeQ = null;
+let viewSig = '';
+const answers = store.get('answers', {});   // key group/question/rev -> answer state
+const seen = new Set(store.get('seen', []));
+const save = () => { store.set('answers', answers); store.set('seen', [...seen]); };
+const key = (g, q) => `${g.id}/${q.id}/${q.rev}`;
+
+// Group source: who is asking (grill-me, a subagent, the agent itself…)
+const SRC = {
+  'grill-me': { label: 'grill-me', cls: 'grill' },
+  'grill-with-docs': { label: 'grill-with-docs', cls: 'grill' },
+  grilling: { label: 'grilling', cls: 'grill' },
+  subagent: { label: 'Subagent', cls: 'subagent' },
+  agent: { label: 'Agent questions', cls: 'agent' },
+};
+function sourceHtml(g) {
+  const s = g.source;
+  if (!s) return '';
+  const t = SRC[s.type] || { label: s.type, cls: '' };
+  return `<div class="source"><span class="src-type ${t.cls}">${esc(t.label)}</span>${s.name ? `<span>${esc(s.name)}</span>` : ''}${s.id ? `<span class="src-id">${esc(s.id)}</span>` : ''}</div>`;
+}
+const sourceShort = (g) => (g.source ? (SRC[g.source.type]?.label || g.source.type) : '');
+
+const openGroups = () => snap.groups.filter((g) => g.status === 'open' && g.questions.length);
+const closedGroups = () => snap.groups.filter((g) => !(g.status === 'open' && g.questions.length) && (g.history.length || g.status === 'processing'));
+const groupById = (id) => snap.groups.find((g) => g.id === id);
+
+// ---------- answer state ----------
+function st(g, q) {
+  const k = key(g, q);
+  if (!answers[k]) {
+    let value = null;
+    if (q.type === 'single') value = q.recommended ?? null;
+    if (q.type === 'multi') value = q.recommended == null ? [] : [].concat(q.recommended);
+    if (q.type === 'bool') value = typeof q.recommended === 'boolean' ? q.recommended : null;
+    if (q.type === 'text') value = typeof q.recommended === 'string' ? q.recommended : '';
+    answers[k] = { mode: 'decide', value, other: '', note: '', explain: '', noteOpen: false };
+  }
+  return answers[k];
+}
+function isAnswered(g, q) {
+  const s = st(g, q);
+  if (s.mode !== 'decide') return false;
+  if (q.type === 'single') return s.value != null && (s.value !== '__other' || s.other.trim() !== '');
+  if (q.type === 'multi') return s.value.length > 0;
+  if (q.type === 'bool') return s.value !== null;
+  return String(s.value).trim() !== '';
+}
+function status(g, q) {
+  const s = st(g, q);
+  if (s.mode === 'explain') return 'explain';
+  if (s.mode === 'skip') return 'skip';
+  return isAnswered(g, q) ? 'answered' : 'open';
+}
+const STATUS_LABEL = { answered: 'Decided', open: 'Unanswered', explain: 'Explain', skip: 'Skipped' };
+const STATUS_CLASS = { answered: 'ok', open: 'open', explain: 'explain', skip: 'skip' };
+const openCount = (g) => g.questions.filter((q) => status(g, q) === 'open').length;
+const unseenCount = (g) => g.questions.filter((q) => !seen.has(key(g, q))).length;
+
+function isRecommended(g, q) {
+  const s = st(g, q);
+  if (q.recommended == null) return false;
+  if (q.type === 'multi') { const r = [].concat(q.recommended); return r.length === s.value.length && r.every((x) => s.value.includes(x)); }
+  return s.value === q.recommended;
+}
+function valueLabel(g, q) {
+  const s = st(g, q);
+  if (q.type === 'single') {
+    if (s.value === '__other') return 'Other: ' + s.other.trim();
+    const o = q.options.find((o) => o.id === s.value);
+    return o ? o.id + ') ' + o.label : '';
+  }
+  if (q.type === 'multi') return q.options.filter((o) => s.value.includes(o.id)).map((o) => o.id + ') ' + o.label).join('; ');
+  if (q.type === 'bool') return s.value === null ? '' : s.value ? 'Yes' : 'No';
+  return String(s.value).trim();
+}
+function answerLine(g, q) {
+  const s = st(g, q), x = status(g, q);
+  if (x === 'explain') return 'EXPLAIN' + (s.explain.trim() ? ': ' + s.explain.trim() : '');
+  if (x === 'skip') return 'SKIPPED';
+  if (x === 'open') return 'UNANSWERED';
+  return valueLabel(g, q) + (isRecommended(g, q) ? ' (recommended)' : '');
+}
+
+// ---------- connection ----------
+function connect() {
+  const es = new EventSource('/api/events');
+  es.onmessage = (e) => {
+    const m = JSON.parse(e.data);
+    if (m.type === 'stopped') { es.close(); showEnded(); return; }
+    snap = m.state;
+    setConn(true);
+    onSnapshot();
+  };
+  es.onerror = () => setConn(false);
+}
+function setConn(on) {
+  const el = document.getElementById('conn');
+  el.className = 'conn' + (on ? '' : ' off');
+  el.textContent = on ? 'connected' : 'disconnected from the agent';
+}
+function showEnded() {
+  const d = document.createElement('div');
+  d.className = 'ended';
+  d.innerHTML = '<div><h2>Session ended</h2><p>The agent closed the form. You can close this tab.</p></div>';
+  document.body.append(d);
+}
+
+function onSnapshot() {
+  const valid = activeTab === '__done' ? closedGroups().length > 0 : openGroups().some((g) => g.id === activeTab);
+  if (!valid) activeTab = openGroups()[0]?.id ?? (closedGroups().length ? '__done' : null);
+  renderHeader();
+  const sig = signature();
+  if (sig !== viewSig) renderMain();
+}
+function signature() {
+  if (activeTab === '__done') return 'done:' + doneDetail + ':' + JSON.stringify(closedGroups().map((g) => [g.id, g.status, g.history.length]));
+  const g = activeTab && groupById(activeTab);
+  return g ? 'g:' + g.id + ':' + g.questions.map((q) => q.id + '@' + q.rev).join(',') + ':' + g.history.length + ':' + (g.description || '') : 'empty';
+}
+
+// ---------- render: header ----------
+function renderHeader() {
+  const title = snap.title || 'Decisions';
+  document.getElementById('title').textContent = title;
+  const unseen = openGroups().reduce((n, g) => n + unseenCount(g), 0);
+  document.title = (unseen ? `(${unseen}) ` : '') + title;
+
+  const working = snap.groups.filter((g) => g.status === 'processing');
+  const w = document.getElementById('working');
+  w.hidden = !working.length;
+  w.innerHTML = working.length ? 'Agent processing: ' + working.map((g) => `<span class="chip-w">${esc(g.label)}</span>`).join('') : '';
+
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  for (const g of openGroups()) {
+    const b = tabButton(g.id, g.label);
+    if (g.source) b.title = sourceShort(g) + (g.source.name ? ' · ' + g.source.name : '') + (g.source.id ? ' · ' + g.source.id : '');
+    const nNew = g.id === activeTab ? 0 : unseenCount(g);
+    const nOpen = openCount(g);
+    const badge = document.createElement('span');
+    badge.className = 'badge' + (nNew ? ' new' : nOpen ? '' : ' zero');
+    badge.textContent = nNew ? 'new' : nOpen ? nOpen : '✓';
+    badge.title = nNew ? nNew + ' new questions' : nOpen ? nOpen + ' unanswered' : 'Ready to send';
+    b.append(badge);
+    tabs.append(b);
+  }
+  const closed = closedGroups();
+  if (closed.length) {
+    const b = tabButton('__done', 'Done');
+    b.classList.add('done-tab');
+    const badge = document.createElement('span');
+    badge.className = 'badge plain';
+    badge.textContent = closed.length;
+    b.append(badge);
+    tabs.append(b);
+  }
+}
+function tabButton(id, label) {
+  const b = document.createElement('button');
+  b.className = 'tab'; b.type = 'button'; b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', String(id === activeTab));
+  b.textContent = label;
+  b.onclick = () => selectTab(id);
+  return b;
+}
+function selectTab(id) {
+  activeTab = id;
+  doneDetail = null;
+  const g = groupById(id);
+  activeQ = g?.questions[0]?.id ?? null;
+  renderHeader();
+  renderMain();
+  window.scrollTo({ top: 0 });
+}
+
+// ---------- render: content ----------
+function renderMain() {
+  viewSig = signature();
+  const focus = document.activeElement?.id ? { id: document.activeElement.id, s: document.activeElement.selectionStart, e: document.activeElement.selectionEnd } : null;
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  if (!activeTab) {
+    main.innerHTML = '<div class="empty"><b>No questions</b><span>The agent is working. New questions will appear here automatically.</span></div>';
+  } else if (activeTab === '__done') {
+    const g = doneDetail && closedGroups().find((x) => x.id === doneDetail);
+    if (g) main.append(...renderClosedDetail(g));
+    else for (const x of closedGroups()) main.append(renderClosed(x));
+  } else {
+    const g = groupById(activeTab);
+    if (g.source) main.insertAdjacentHTML('beforeend', sourceHtml(g));
+    if (g.description) { const d = document.createElement('div'); d.className = 'group-intro md'; d.innerHTML = md(g.description); main.append(d); }
+    if (g.history.length) {
+      const d = document.createElement('details');
+      d.className = 'prev';
+      d.innerHTML = `<summary>Earlier decisions in this group (${g.history.reduce((n, r) => n + r.items.length, 0)})</summary>`;
+      d.append(renderHistory(g));
+      main.append(d);
+    }
+    if (!activeQ || !g.questions.some((q) => q.id === activeQ)) activeQ = g.questions[0]?.id;
+    for (const q of g.questions) main.append(renderQuestion(g, q));
+    main.append(renderSendPanel(g));
+    g.questions.forEach((q) => seen.add(key(g, q)));
+    save();
+    renderHeader();
+  }
+  if (focus) {
+    const el = document.getElementById(focus.id);
+    if (el) { el.focus(); if (el.setSelectionRange && focus.s != null) el.setSelectionRange(focus.s, focus.e); }
+  }
+}
+
+function renderQuestion(g, q) {
+  const s = st(g, q);
+  const card = document.createElement('article');
+  card.className = 'q' + (q.id === activeQ ? ' active' : '');
+  card.id = 'q-' + q.id;
+  card.onclick = () => {
+    if (activeQ === q.id) return;
+    activeQ = q.id;
+    document.querySelectorAll('.q.active').forEach((e) => e.classList.remove('active'));
+    card.classList.add('active');
+  };
+  const x = status(g, q);
+  const isNew = !seen.has(key(g, q));
+  card.innerHTML = `
+    <div class="q-head"><span class="q-id">${esc(q.id)}</span><h2 class="q-title">${esc(q.title)}</h2>
+      ${isNew ? '<span class="pill new">New</span>' : ''}<span class="pill ${STATUS_CLASS[x]}" data-pill>${STATUS_LABEL[x]}</span></div>
+    ${q.explanation ? `<div class="explanation"><span class="lbl">Explanation</span><div class="md">${md(q.explanation)}</div></div>` : ''}
+    ${q.body ? `<div class="md">${md(q.body)}</div>` : ''}
+    ${q.context ? `<details class="ctx"><summary>Context</summary><div class="md">${md(q.context)}</div></details>` : ''}`;
+
+  const box = document.createElement('div');
+  box.className = s.mode === 'decide' ? '' : 'dim';
+  box.append(renderAnswer(g, q));
+  card.append(box);
+  const fid = (kind) => 'f-' + key(g, q).replace(/[^\w-]/g, '_') + '-' + kind;
+  if (s.mode === 'decide' && s.noteOpen) card.append(textField(fid('note'), 'Notes on the decision', s.note, (v) => { s.note = v; changed(g, q, false); }));
+  if (s.mode === 'explain') card.append(textField(fid('explain'), 'What exactly should be explained?', s.explain, (v) => { s.explain = v; changed(g, q, false); }, true));
+
+  const actions = document.createElement('div');
+  actions.className = 'q-actions';
+  actions.append(
+    chip('Notes', s.mode === 'decide' && (s.noteOpen || s.note), 'note', () => { s.mode = 'decide'; s.noteOpen = !s.noteOpen; changed(g, q); }),
+    chip('Explain', s.mode === 'explain', 'explain', () => toggleMode(g, q, 'explain'), 'E'),
+    chip('Skip', s.mode === 'skip', 'skip', () => toggleMode(g, q, 'skip')),
+  );
+  card.append(actions);
+  return card;
+}
+
+function renderAnswer(g, q) {
+  const s = st(g, q);
+  const wrap = document.createElement('div');
+  wrap.className = 'options';
+  const fid = 'f-' + key(g, q).replace(/[^\w-]/g, '_');
+  if (q.type === 'text') {
+    wrap.append(textField(fid + '-text', null, s.value, (v) => { s.value = v; changed(g, q, false); }, false, q.placeholder || 'Your answer'));
+    return wrap;
+  }
+  const opts = q.type === 'bool'
+    ? [{ id: true, label: 'Yes' }, { id: false, label: 'No' }]
+    : q.type === 'single' ? [...q.options, { id: '__other', label: 'Other…' }] : q.options;
+  const recs = q.recommended == null ? [] : [].concat(q.recommended);
+  opts.forEach((o, i) => {
+    const selected = q.type === 'multi' ? s.value.includes(o.id) : s.value === o.id;
+    const lab = document.createElement('label');
+    lab.className = 'opt' + (selected ? ' sel' : '');
+    const input = document.createElement('input');
+    input.type = q.type === 'multi' ? 'checkbox' : 'radio';
+    input.name = fid; input.checked = selected;
+    input.onchange = () => pick(g, q, o.id);
+    lab.append(input);
+    const label = o.id === '__other' ? esc(o.label) : md(o.label).replace(/^<p>|<\/p>\s*$/g, '');
+    lab.insertAdjacentHTML('beforeend', `<span class="num">${i + 1}</span><span class="txt">${label}${o.description ? `<div class="desc md">${md(o.description)}</div>` : ''}</span>${recs.includes(o.id) ? '<span class="rec">RECOMMENDED</span>' : ''}`);
+    wrap.append(lab);
+  });
+  if (q.type === 'single' && s.value === '__other') wrap.append(textField(fid + '-other', 'Your answer', s.other, (v) => { s.other = v; changed(g, q, false); }, true));
+  return wrap;
+}
+
+function textField(id, label, value, onInput, autofocus = false, placeholder = '') {
+  const box = document.createElement('div');
+  if (label) { const l = document.createElement('label'); l.className = 'field-lbl'; l.htmlFor = id; l.textContent = label; box.append(l); }
+  const ta = document.createElement('textarea');
+  ta.id = id; ta.value = value; ta.placeholder = placeholder;
+  ta.oninput = () => onInput(ta.value);
+  box.append(ta);
+  if (autofocus) setTimeout(() => { if (document.activeElement?.tagName !== 'TEXTAREA') ta.focus(); }, 0);
+  return box;
+}
+function chip(label, on, kind, onClick, k) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chip ' + kind + (on ? ' on' : '');
+  b.innerHTML = esc(label) + (k ? ` <kbd>${k}</kbd>` : '');
+  b.onclick = (e) => { e.stopPropagation(); onClick(); };
+  return b;
+}
+
+function renderSendPanel(g) {
+  const actions = document.createElement('div');
+  actions.className = 'send-actions';
+  actions.id = 'send-actions';
+  actions.innerHTML = '<span class="keys">1–9 option · J/K question · ←/→ tab · E explain · Ctrl+Enter send group</span>';
+  const send = document.createElement('button');
+  send.className = 'btn primary'; send.type = 'button'; send.textContent = 'Send group';
+  send.onclick = () => trySendGroup(g);
+  actions.append(send);
+  return actions;
+}
+
+function renderHistory(g) {
+  const box = document.createElement('div');
+  box.className = 'hist';
+  for (const r of g.history) {
+    const sec = document.createElement('div');
+    sec.className = 'hist-round';
+    const when = new Date(r.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    sec.innerHTML = `<span class="hist-when">Sent ${when}</span>` + r.items.map((it) =>
+      `<div class="hist-item"><span class="q-id">${esc(it.id)}</span><span>${esc(it.title)}</span><span class="ans">${esc(it.answer + (it.note ? '\nnotes: ' + it.note : ''))}</span></div>`).join('');
+    box.append(sec);
+  }
+  return box;
+}
+
+const closedPill = (g) => g.status === 'processing' ? '<span class="pill work">Agent processing</span>' : '<span class="pill ok">Done</span>';
+
+function renderClosed(g) {
+  const card = document.createElement('section');
+  card.className = 'done-card click';
+  card.tabIndex = 0;
+  card.innerHTML = `<div class="done-head"><h2>${esc(g.label)}</h2>${closedPill(g)}</div>${sourceHtml(g)}`;
+  card.append(renderHistory(g));
+  card.insertAdjacentHTML('beforeend', '<span class="more">Show full questions →</span>');
+  const open = () => { doneDetail = g.id; renderMain(); window.scrollTo({ top: 0 }); };
+  card.onclick = open;
+  card.onkeydown = (e) => { if (e.key === 'Enter') open(); };
+  return card;
+}
+
+// A done group in full view: the questions as they looked, with the answers marked
+function renderClosedDetail(g) {
+  const back = document.createElement('button');
+  back.className = 'back'; back.type = 'button'; back.textContent = '← All done';
+  back.onclick = () => { doneDetail = null; renderMain(); };
+  const head = document.createElement('div');
+  head.className = 'detail-head';
+  head.innerHTML = `<h2>${esc(g.label)}</h2>${closedPill(g)}`;
+  const nodes = [back, head];
+  if (g.source) { const s = document.createElement('div'); s.innerHTML = sourceHtml(g); nodes.push(s.firstChild); }
+  if (g.description) { const d = document.createElement('div'); d.className = 'group-intro md'; d.innerHTML = md(g.description); nodes.push(d); }
+  for (const r of g.history) {
+    const when = new Date(r.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const lbl = document.createElement('div');
+    lbl.className = 'round-lbl';
+    lbl.textContent = 'Sent ' + when;
+    nodes.push(lbl, ...r.items.map(renderReadonly));
+  }
+  return nodes;
+}
+
+function renderReadonly(it) {
+  const q = it.question, a = it.result || {};
+  const card = document.createElement('article');
+  card.className = 'q readonly';
+  const x = a.status || 'answered';
+  card.innerHTML = `<div class="q-head"><span class="q-id">${esc(it.id)}</span><h2 class="q-title">${esc(it.title)}</h2><span class="pill ${STATUS_CLASS[x]}">${STATUS_LABEL[x]}</span></div>`;
+  if (!q) {
+    card.insertAdjacentHTML('beforeend', `<div class="ro-note">${esc(it.answer)}</div>`);
+    return card;
+  }
+  card.insertAdjacentHTML('beforeend', `
+    ${q.explanation ? `<div class="explanation"><span class="lbl">Explanation</span><div class="md">${md(q.explanation)}</div></div>` : ''}
+    ${q.body ? `<div class="md">${md(q.body)}</div>` : ''}
+    ${q.context ? `<details class="ctx"><summary>Context</summary><div class="md">${md(q.context)}</div></details>` : ''}`);
+  const answered = x === 'answered';
+  if (q.type === 'text') {
+    if (answered) card.insertAdjacentHTML('beforeend', `<div class="ro-text">${esc(a.value ?? '')}</div>`);
+  } else {
+    const opts = q.type === 'bool' ? [{ id: true, label: 'Yes' }, { id: false, label: 'No' }] : q.options;
+    const recs = q.recommended == null ? [] : [].concat(q.recommended);
+    const chosen = (id) => answered && (q.type === 'multi' ? (a.value || []).includes(id) : a.value === id);
+    const list = document.createElement('div');
+    list.className = 'options';
+    list.innerHTML = opts.map((o) => `<div class="opt ro${chosen(o.id) ? ' sel' : ''}"><span class="mark${q.type === 'multi' ? ' box' : ''}"></span><span class="txt">${md(o.label).replace(/^<p>|<\/p>\s*$/g, '')}${o.description ? `<div class="desc md">${md(o.description)}</div>` : ''}</span>${recs.includes(o.id) ? '<span class="rec">RECOMMENDED</span>' : ''}</div>`).join('');
+    if (answered && a.other) list.insertAdjacentHTML('beforeend', `<div class="opt ro sel"><span class="mark"></span><span class="txt">Other: ${esc(a.other)}</span></div>`);
+    card.append(list);
+  }
+  if (a.note) card.insertAdjacentHTML('beforeend', `<div class="ro-note"><b>Notes:</b> ${esc(a.note)}</div>`);
+  if (x === 'explain') card.insertAdjacentHTML('beforeend', `<div class="ro-note"><b>To explain:</b> ${esc(a.explain || '(no description)')}</div>`);
+  return card;
+}
+
+// ---------- changes ----------
+function pick(g, q, id) {
+  const s = st(g, q);
+  s.mode = 'decide';
+  if (q.type === 'multi') s.value = s.value.includes(id) ? s.value.filter((x) => x !== id) : [...s.value, id];
+  else s.value = id;
+  activeQ = q.id;
+  changed(g, q);
+}
+function toggleMode(g, q, mode) {
+  const s = st(g, q);
+  s.mode = s.mode === mode ? 'decide' : mode;
+  activeQ = q.id;
+  changed(g, q);
+}
+// rerender = false while typing in a text field, so the cursor is not lost
+function changed(g, q, rerender = true) {
+  save();
+  if (rerender) {
+    document.getElementById('q-' + q.id)?.replaceWith(renderQuestion(g, q));
+  } else {
+    const pill = document.querySelector('#q-' + CSS.escape(q.id) + ' [data-pill]');
+    const x = status(g, q);
+    if (pill) { pill.className = 'pill ' + STATUS_CLASS[x]; pill.textContent = STATUS_LABEL[x]; }
+  }
+  renderHeader();
+}
+
+// ---------- sending ----------
+function buildText(g) {
+  const lines = ['## ' + g.label];
+  for (const q of g.questions) {
+    const s = st(g, q);
+    lines.push(`${q.id} ${q.title} → ${answerLine(g, q)}`);
+    if (s.mode === 'decide' && s.note.trim()) lines.push('   notes: ' + s.note.trim().replace(/\n/g, '\n   '));
+  }
+  return lines.join('\n');
+}
+function buildAnswers(g) {
+  return g.questions.map((q) => {
+    const s = st(g, q), x = status(g, q);
+    const other = q.type === 'single' && s.value === '__other';
+    return {
+      id: q.id, title: q.title, status: x, line: answerLine(g, q),
+      value: x === 'answered' && !other ? s.value : null,
+      other: x === 'answered' && other ? s.other.trim() : null,
+      label: x === 'answered' ? valueLabel(g, q) : null,
+      recommended: x === 'answered' ? isRecommended(g, q) : null,
+      note: s.mode === 'decide' && s.note.trim() ? s.note.trim() : null,
+      explain: x === 'explain' ? s.explain.trim() : null,
+    };
+  });
+}
+
+function trySendGroup(g, force = false) {
+  const actions = document.getElementById('send-actions');
+  actions.querySelectorAll('.warnbar, .errbar').forEach((e) => e.remove());
+  const open = g.questions.filter((q) => status(g, q) === 'open');
+  if (open.length && !force) {
+    const w = document.createElement('div');
+    w.className = 'warnbar';
+    w.innerHTML = `<span>${open.length === 1 ? '1 question has' : open.length + ' questions have'} no answer (${open.map((q) => esc(q.id)).join(', ')}). The agent will ask about them later.</span>`;
+    const go = document.createElement('button'); go.className = 'btn primary'; go.type = 'button'; go.textContent = 'Send anyway';
+    go.onclick = () => trySendGroup(g, true);
+    w.append(go);
+    actions.prepend(w);
+    go.focus();
+    return;
+  }
+  submit([g], actions);
+}
+
+function submit(groups, errHost) {
+  errHost.querySelectorAll('.errbar').forEach((e) => e.remove());
+  const payload = { groups: groups.map((g) => ({ group: g.id, answers: buildAnswers(g), text: buildText(g) })) };
+  fetch('/api/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    .then((r) => r.json())
+    .then((r) => {
+      if (!r.ok) throw new Error('the server rejected the answers');
+      for (const g of groups) for (const q of g.questions) delete answers[key(g, q)];
+      save();
+    })
+    .catch((e) => {
+      const err = document.createElement('div');
+      err.className = 'errbar';
+      err.textContent = 'Could not send (' + e.message + '). The agent\'s server may have been stopped; answer in the terminal.';
+      errHost.prepend(err);
+    });
+}
+
+// ---------- keyboard ----------
+document.addEventListener('keydown', (e) => {
+  if (!snap) return;
+  const g = activeTab && activeTab !== '__done' ? groupById(activeTab) : null;
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (g) trySendGroup(g); return; }
+  const el = document.activeElement;
+  if (el?.tagName === 'TEXTAREA') { if (e.key === 'Escape') el.blur(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const ids = [...openGroups().map((x) => x.id), ...(closedGroups().length ? ['__done'] : [])];
+  const idx = ids.indexOf(activeTab);
+  if (e.key === 'ArrowRight' && ids.length) { e.preventDefault(); selectTab(ids[(idx + 1) % ids.length]); return; }
+  if (e.key === 'ArrowLeft' && ids.length) { e.preventDefault(); selectTab(ids[(idx - 1 + ids.length) % ids.length]); return; }
+  if (!g) return;
+  const qi = Math.max(0, g.questions.findIndex((q) => q.id === activeQ));
+  const q = g.questions[qi];
+  const k = e.key.toLowerCase();
+  if (k === 'j' || k === 'k') {
+    const next = g.questions[Math.min(g.questions.length - 1, Math.max(0, qi + (k === 'j' ? 1 : -1)))];
+    activeQ = next.id;
+    renderMain();
+    document.getElementById('q-' + next.id)?.scrollIntoView({ block: 'nearest' });
+    return;
+  }
+  if (!q) return;
+  if (k === 'e') { e.preventDefault(); toggleMode(g, q, 'explain'); return; }
+  if (/^[1-9]$/.test(e.key) && q.type !== 'text') {
+    const opts = q.type === 'bool' ? [true, false] : q.type === 'single' ? [...q.options.map((o) => o.id), '__other'] : q.options.map((o) => o.id);
+    const id = opts[Number(e.key) - 1];
+    if (id !== undefined) pick(g, q, id);
+  }
+});
+
+connect();
+</script>
+</body>
+</html>
