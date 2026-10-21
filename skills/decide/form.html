@@ -516,9 +516,9 @@ function renderSendPanel(g) {
   const actions = document.createElement('div');
   actions.className = 'send-actions';
   actions.id = 'send-actions';
-  actions.innerHTML = '<span class="keys">1–9 option · J/K question · ←/→ tab · E explain · Ctrl+Enter send group</span>';
+  actions.innerHTML = '<span class="keys">1–9 option · J/K question · ←/→ tab · E explain · Ctrl+Enter send</span>';
   const send = document.createElement('button');
-  send.className = 'btn primary'; send.type = 'button'; send.textContent = 'Send group';
+  send.className = 'btn primary'; send.type = 'button'; send.textContent = 'Send';
   send.onclick = () => trySendGroup(g);
   actions.append(send);
   return actions;
