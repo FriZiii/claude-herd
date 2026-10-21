@@ -668,7 +668,7 @@ function trySendGroup(g, force = false) {
     const w = document.createElement('div');
     w.className = 'warnbar';
     w.innerHTML = `<span>${open.length === 1 ? '1 question has' : open.length + ' questions have'} no answer (${open.map((q) => esc(q.id)).join(', ')}). The agent will ask about them later.</span>`;
-    const go = document.createElement('button'); go.className = 'btn primary'; go.type = 'button'; go.textContent = 'Send anyway';
+    const go = document.createElement('button'); go.className = 'btn primary'; go.type = 'button'; go.textContent = 'Send';
     go.onclick = () => trySendGroup(g, true);
     w.append(go);
     actions.prepend(w);
